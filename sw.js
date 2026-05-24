@@ -1,4 +1,4 @@
-const CACHE = 'bolsillo-v2';
+const CACHE = 'bolsillo-v3';
 const ASSETS = [
   './',
   './index.html',
