@@ -604,6 +604,196 @@ body {
   pointer-events: none;
 }
 .toast.show { opacity: 1; }
+
+/* ============ POCKETS (BOLSILLOS) ============ */
+.pocket-selector {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 12px;
+  margin: 0 -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  scrollbar-width: none;
+}
+.pocket-selector::-webkit-scrollbar { display: none; }
+
+.pocket-chip {
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.pocket-chip.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.pocket-chip .chip-emoji { font-size: 15px; }
+
+.pocket-chart-card {
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+  border-radius: 20px;
+  padding: 20px 18px 14px;
+  border: 1px solid var(--line-strong);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.pocket-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.pocket-chart-name {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pocket-chart-balance {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+.pocket-chart-trend {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  margin-top: 2px;
+}
+.pocket-chart-trend.up { color: var(--green); }
+.pocket-chart-trend.down { color: var(--red); }
+.pocket-chart-trend.neutral { color: var(--ink-mute); }
+
+.pocket-chart-svg {
+  width: 100%;
+  height: 100px;
+  margin-top: 10px;
+  display: block;
+}
+
+.pocket-movements-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-mute);
+  margin: 16px 4px 8px;
+}
+
+.pocket-mv-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.pocket-mv-icon {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+  border: 1px solid var(--line);
+}
+.pocket-mv-icon.in { background: rgba(141, 181, 128, 0.15); color: var(--green); border-color: rgba(141, 181, 128, 0.3); }
+.pocket-mv-icon.out { background: rgba(217, 119, 119, 0.15); color: var(--red); border-color: rgba(217, 119, 119, 0.3); }
+.pocket-mv-info { flex: 1; min-width: 0; }
+.pocket-mv-note {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pocket-mv-date {
+  font-size: 11px;
+  color: var(--ink-mute);
+  margin-top: 1px;
+}
+.pocket-mv-amount {
+  font-family: 'Fraunces', serif;
+  font-size: 15px;
+  font-weight: 500;
+}
+.pocket-mv-amount.in { color: var(--green); }
+.pocket-mv-amount.out { color: var(--red); }
+
+.pocket-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.pocket-action-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-card);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.pocket-action-btn.deposit {
+  background: rgba(141, 181, 128, 0.12);
+  border-color: rgba(141, 181, 128, 0.3);
+  color: var(--green);
+}
+.pocket-action-btn.withdraw {
+  background: rgba(217, 119, 119, 0.12);
+  border-color: rgba(217, 119, 119, 0.3);
+  color: var(--red);
+}
+.pocket-action-btn:active { transform: scale(0.97); }
+
+.pocket-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-mute);
+}
+
+/* Color swatches for pocket creation */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-top: 6px;
+}
+.color-swatch {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s;
+}
+.color-swatch.selected {
+  border-color: var(--ink);
+  transform: scale(1.15);
+}
 </style>
 </head>
 <body>
@@ -647,6 +837,16 @@ body {
   </div>
   <div id="goalsList"></div>
   <button class="btn-secondary" onclick="openGoalModal()" style="margin-top: 16px;">+ Nueva meta de ahorro</button>
+</div>
+
+<!-- TAB: BOLSILLOS -->
+<div class="tab-content" id="tab-pockets">
+  <div class="section-title">
+    mis bolsillos
+    <span class="count" id="pocketCount">0</span>
+  </div>
+  <div id="pocketsContainer"></div>
+  <button class="btn-secondary" onclick="openPocketModal()" style="margin-top: 16px;">+ Nuevo bolsillo</button>
 </div>
 
 <!-- TAB: REPORTES -->
@@ -702,6 +902,10 @@ body {
   <button class="nav-btn active" data-tab="transactions" onclick="switchTab('transactions')">
     <span class="nav-icon">◐</span>
     <span class="nav-label">Movs</span>
+  </button>
+  <button class="nav-btn" data-tab="pockets" onclick="switchTab('pockets')">
+    <span class="nav-icon">⬚</span>
+    <span class="nav-label">Bolsillos</span>
   </button>
   <button class="nav-btn" data-tab="goals" onclick="switchTab('goals')">
     <span class="nav-icon">◈</span>
@@ -784,6 +988,51 @@ body {
   </div>
 </div>
 
+<!-- POCKET MODAL (crear/editar) -->
+<div class="modal-backdrop" id="pocketModal" onclick="if(event.target===this) closePocketModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="pocketModalTitle">Nuevo bolsillo</div>
+    <div class="field">
+      <label class="field-label">Emoji</label>
+      <div class="cat-grid" id="pocketEmojiGrid"></div>
+    </div>
+    <div class="field">
+      <label class="field-label">Nombre</label>
+      <input type="text" id="pocketName" placeholder="Efectivo, Nequi, NU...">
+    </div>
+    <div class="field">
+      <label class="field-label">Color</label>
+      <div class="color-grid" id="pocketColorGrid"></div>
+    </div>
+    <div class="field" id="pocketInitialField">
+      <label class="field-label">Saldo inicial (opcional)</label>
+      <input type="text" inputmode="numeric" id="pocketInitial" class="amount-input" placeholder="0">
+    </div>
+    <button class="btn-primary" onclick="savePocket()">Guardar bolsillo</button>
+    <button class="btn-secondary btn-danger" id="deletePocketBtn" style="display:none" onclick="deleteCurrentPocket()">Eliminar bolsillo</button>
+    <button class="btn-secondary" onclick="closePocketModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- POCKET MOVEMENT MODAL (depositar/retirar) -->
+<div class="modal-backdrop" id="pocketMoveModal" onclick="if(event.target===this) closePocketMoveModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="pocketMoveTitle">Mover dinero</div>
+    <div class="field">
+      <label class="field-label">Monto</label>
+      <input type="text" inputmode="numeric" id="pocketMoveAmount" class="amount-input" placeholder="0">
+    </div>
+    <div class="field">
+      <label class="field-label">Nota (opcional)</label>
+      <input type="text" id="pocketMoveNote" placeholder="¿Para qué?">
+    </div>
+    <button class="btn-primary" id="pocketMoveConfirmBtn" onclick="savePocketMove()">Confirmar</button>
+    <button class="btn-secondary" onclick="closePocketMoveModal()">Cancelar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -791,7 +1040,9 @@ body {
 const STORAGE_KEY = 'bolsillo_v1';
 let state = {
   transactions: [],
-  goals: []
+  goals: [],
+  pockets: [],
+  pocketMoves: []
 };
 let currentTxType = 'expense';
 let currentCategory = null;
@@ -799,6 +1050,20 @@ let editingTxId = null;
 let currentEmoji = '💰';
 let editingGoalId = null;
 let addingToGoalId = null;
+let editingPocketId = null;
+let currentPocketEmoji = '💼';
+let currentPocketColor = '#e8a87c';
+let activePocketId = null;
+let pocketMoveType = 'deposit'; // 'deposit' or 'withdraw'
+let pocketMoveTargetId = null;
+
+const POCKET_COLORS = [
+  '#e8a87c', '#d97757', '#8db580', '#e3c46d',
+  '#7ba7d9', '#b88dd9', '#d977a6', '#c9a87c',
+  '#6dc9c2', '#d9b977', '#a8a8b8', '#f4ede2'
+];
+
+const POCKET_EMOJIS = ['💼','💰','💵','🏦','📱','💳','🐷','🎯','✈️','🏠','🚗','🛒','💍','🎮','📚','🎁'];
 
 const CATEGORIES = {
   expense: [
@@ -830,7 +1095,13 @@ const EMOJIS = ['💰','🏖️','🚗','🏠','💻','📱','🎓','✈️','�
 function load() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    if (data) state = JSON.parse(data);
+    if (data) {
+      const parsed = JSON.parse(data);
+      state.transactions = parsed.transactions || [];
+      state.goals = parsed.goals || [];
+      state.pockets = parsed.pockets || [];
+      state.pocketMoves = parsed.pocketMoves || [];
+    }
   } catch(e) { console.error(e); }
 }
 function save() {
@@ -867,6 +1138,7 @@ function render() {
   renderHeader();
   renderTransactions();
   renderGoals();
+  renderPockets();
   renderReports();
 }
 
@@ -875,13 +1147,20 @@ function renderHeader() {
   document.getElementById('currentMonth').textContent =
     now.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }).toUpperCase();
 
-  // Calculate this month's balance
+  // Calculate this month's balance (transactions + pocket moves)
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   let income = 0, expense = 0;
   state.transactions.forEach(t => {
     if (t.date >= monthStart) {
       if (t.type === 'income') income += t.amount;
       else expense += t.amount;
+    }
+  });
+  // Include pocket movements in monthly balance
+  state.pocketMoves.forEach(m => {
+    if (m.date >= monthStart) {
+      if (m.type === 'deposit') income += m.amount;
+      else expense += m.amount;
     }
   });
   const balance = income - expense;
@@ -1261,6 +1540,362 @@ function addToGoal() {
   }
 }
 
+// ============ POCKETS ============
+function getPocketBalance(pocketId) {
+  const pocket = state.pockets.find(p => p.id === pocketId);
+  if (!pocket) return 0;
+  let balance = pocket.initial || 0;
+  state.pocketMoves.forEach(m => {
+    if (m.pocketId === pocketId) {
+      balance += m.type === 'deposit' ? m.amount : -m.amount;
+    }
+  });
+  return balance;
+}
+
+function getPocketHistory(pocketId) {
+  // Returns array of {date, balance} sorted by date, including initial balance
+  const pocket = state.pockets.find(p => p.id === pocketId);
+  if (!pocket) return [];
+
+  const moves = state.pocketMoves
+    .filter(m => m.pocketId === pocketId)
+    .sort((a, b) => a.date - b.date);
+
+  const history = [{ date: pocket.created, balance: pocket.initial || 0 }];
+  let running = pocket.initial || 0;
+  moves.forEach(m => {
+    running += m.type === 'deposit' ? m.amount : -m.amount;
+    history.push({ date: m.date, balance: running });
+  });
+  return history;
+}
+
+function renderPockets() {
+  const container = document.getElementById('pocketsContainer');
+  document.getElementById('pocketCount').textContent = state.pockets.length.toString().padStart(2, '0');
+
+  if (state.pockets.length === 0) {
+    container.innerHTML = `<div class="pocket-empty">
+      <div style="font-size:40px; opacity:0.4; margin-bottom:16px">⬚</div>
+      <div class="serif" style="font-style:italic; font-size:17px">Sin bolsillos aún</div>
+      <div style="font-size:13px; margin-top:8px">Crea tu primer bolsillo: Efectivo, Nequi, NU...</div>
+    </div>`;
+    return;
+  }
+
+  // Pocket selector chips
+  if (!activePocketId || !state.pockets.find(p => p.id === activePocketId)) {
+    activePocketId = state.pockets[0].id;
+  }
+
+  const chips = state.pockets.map(p =>
+    `<div class="pocket-chip ${p.id === activePocketId ? 'active' : ''}" onclick="selectPocket('${p.id}')">
+      <span class="chip-emoji">${p.emoji}</span>
+      <span>${escapeHtml(p.name)}</span>
+    </div>`
+  ).join('');
+
+  const active = state.pockets.find(p => p.id === activePocketId);
+  const balance = getPocketBalance(activePocketId);
+  const history = getPocketHistory(activePocketId);
+
+  // Trend: compare current vs 30 days ago (or initial)
+  const now = Date.now();
+  const monthAgo = now - 30 * 86400000;
+  const oldBalance = history.filter(h => h.date <= monthAgo).pop()?.balance ?? history[0].balance;
+  const delta = balance - oldBalance;
+  const trendClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
+  const trendArrow = delta > 0 ? '↑' : delta < 0 ? '↓' : '→';
+  const trendText = delta === 0
+    ? 'Sin cambios este mes'
+    : `${trendArrow} ${formatMoney(delta)} este mes`;
+
+  // Recent movements
+  const recentMoves = state.pocketMoves
+    .filter(m => m.pocketId === activePocketId)
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 10);
+
+  const movesHtml = recentMoves.length === 0
+    ? `<div style="text-align:center; padding:24px; color:var(--ink-mute); font-size:13px">Sin movimientos todavía</div>`
+    : recentMoves.map(m => `
+        <div class="pocket-mv-item">
+          <div class="pocket-mv-icon ${m.type === 'deposit' ? 'in' : 'out'}">
+            ${m.type === 'deposit' ? '↓' : '↑'}
+          </div>
+          <div class="pocket-mv-info">
+            <div class="pocket-mv-note">${escapeHtml(m.note) || (m.type === 'deposit' ? 'Aporte' : 'Retiro')}</div>
+            <div class="pocket-mv-date">${formatDate(m.date)}</div>
+          </div>
+          <div class="pocket-mv-amount ${m.type === 'deposit' ? 'in' : 'out'}">
+            ${m.type === 'deposit' ? '+' : '−'}${formatMoney(m.amount)}
+          </div>
+        </div>
+      `).join('');
+
+  container.innerHTML = `
+    <div class="pocket-selector">${chips}</div>
+
+    <div class="pocket-chart-card">
+      <div class="pocket-chart-header">
+        <div>
+          <div class="pocket-chart-name">${active.emoji} ${escapeHtml(active.name)}</div>
+          <div class="pocket-chart-balance" style="color:${active.color}">${formatMoney(balance)}</div>
+          <div class="pocket-chart-trend ${trendClass}">${trendText}</div>
+        </div>
+        <button class="goal-btn" style="padding: 6px 10px; flex: none;" onclick="editPocket('${active.id}')">Editar</button>
+      </div>
+      ${renderPocketChart(history, active.color)}
+      <div class="pocket-actions">
+        <button class="pocket-action-btn deposit" onclick="openPocketMove('${active.id}', 'deposit')">
+          ↓ Depositar
+        </button>
+        <button class="pocket-action-btn withdraw" onclick="openPocketMove('${active.id}', 'withdraw')">
+          ↑ Retirar
+        </button>
+      </div>
+    </div>
+
+    <div class="pocket-movements-title">Movimientos recientes</div>
+    ${movesHtml}
+  `;
+}
+
+function renderPocketChart(history, color) {
+  // SVG line chart of balance over time
+  const w = 320, h = 100, pad = 8;
+  if (history.length === 0) {
+    return `<svg class="pocket-chart-svg" viewBox="0 0 ${w} ${h}"></svg>`;
+  }
+
+  // If only one point, draw flat line
+  let points = history;
+  if (points.length === 1) {
+    points = [
+      { date: points[0].date, balance: points[0].balance },
+      { date: Date.now(), balance: points[0].balance }
+    ];
+  }
+
+  const minDate = points[0].date;
+  const maxDate = points[points.length - 1].date;
+  const dateRange = maxDate - minDate || 1;
+
+  const balances = points.map(p => p.balance);
+  const minBal = Math.min(...balances, 0);
+  const maxBal = Math.max(...balances, 0);
+  const balRange = maxBal - minBal || 1;
+
+  const xScale = d => pad + ((d - minDate) / dateRange) * (w - pad * 2);
+  const yScale = b => h - pad - ((b - minBal) / balRange) * (h - pad * 2);
+
+  // Build path
+  const pathD = points.map((p, i) => {
+    const x = xScale(p.date);
+    const y = yScale(p.balance);
+    return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+
+  // Area path (filled)
+  const areaD = pathD + ` L${xScale(maxDate).toFixed(1)},${h - pad} L${xScale(minDate).toFixed(1)},${h - pad} Z`;
+
+  // Zero line if applicable
+  const zeroLine = (minBal < 0 && maxBal > 0)
+    ? `<line x1="${pad}" y1="${yScale(0).toFixed(1)}" x2="${w - pad}" y2="${yScale(0).toFixed(1)}" stroke="rgba(244,237,226,0.15)" stroke-dasharray="2,3" stroke-width="1"/>`
+    : '';
+
+  // Dots at each point
+  const dots = points.map(p => {
+    const x = xScale(p.date);
+    const y = yScale(p.balance);
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.5" fill="${color}"/>`;
+  }).join('');
+
+  // Last point bigger
+  const lastX = xScale(points[points.length - 1].date);
+  const lastY = yScale(points[points.length - 1].balance);
+
+  const gradId = 'grad_' + Math.random().toString(36).slice(2, 8);
+
+  return `<svg class="pocket-chart-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${zeroLine}
+    <path d="${areaD}" fill="url(#${gradId})"/>
+    <path d="${pathD}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="4.5" fill="${color}"/>
+    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="2" fill="var(--bg-card)"/>
+  </svg>`;
+}
+
+function selectPocket(id) {
+  activePocketId = id;
+  renderPockets();
+}
+
+function openPocketModal(pocketId = null) {
+  editingPocketId = pocketId;
+  document.getElementById('pocketName').value = '';
+  document.getElementById('pocketInitial').value = '';
+  currentPocketEmoji = '💼';
+  currentPocketColor = POCKET_COLORS[0];
+
+  if (pocketId) {
+    const p = state.pockets.find(x => x.id === pocketId);
+    if (p) {
+      document.getElementById('pocketModalTitle').textContent = 'Editar bolsillo';
+      document.getElementById('pocketName').value = p.name;
+      currentPocketEmoji = p.emoji;
+      currentPocketColor = p.color;
+      document.getElementById('pocketInitialField').style.display = 'none';
+      document.getElementById('deletePocketBtn').style.display = 'block';
+    }
+  } else {
+    document.getElementById('pocketModalTitle').textContent = 'Nuevo bolsillo';
+    document.getElementById('pocketInitialField').style.display = 'block';
+    document.getElementById('deletePocketBtn').style.display = 'none';
+  }
+
+  renderPocketEmojiGrid();
+  renderPocketColorGrid();
+  document.getElementById('pocketModal').classList.add('open');
+}
+
+function closePocketModal() {
+  document.getElementById('pocketModal').classList.remove('open');
+  editingPocketId = null;
+}
+
+function renderPocketEmojiGrid() {
+  document.getElementById('pocketEmojiGrid').innerHTML = POCKET_EMOJIS.map(e =>
+    `<div class="cat-chip ${currentPocketEmoji === e ? 'selected' : ''}" onclick="selectPocketEmoji('${e}')">
+      <span class="emoji">${e}</span>
+    </div>`
+  ).join('');
+}
+
+function selectPocketEmoji(e) {
+  currentPocketEmoji = e;
+  renderPocketEmojiGrid();
+}
+
+function renderPocketColorGrid() {
+  document.getElementById('pocketColorGrid').innerHTML = POCKET_COLORS.map(c =>
+    `<div class="color-swatch ${currentPocketColor === c ? 'selected' : ''}"
+          style="background:${c}" onclick="selectPocketColor('${c}')"></div>`
+  ).join('');
+}
+
+function selectPocketColor(c) {
+  currentPocketColor = c;
+  renderPocketColorGrid();
+}
+
+function savePocket() {
+  const name = document.getElementById('pocketName').value.trim();
+  if (!name) { toast('Ponle un nombre al bolsillo'); return; }
+
+  if (editingPocketId) {
+    const p = state.pockets.find(x => x.id === editingPocketId);
+    if (p) {
+      p.name = name;
+      p.emoji = currentPocketEmoji;
+      p.color = currentPocketColor;
+    }
+  } else {
+    const initial = parseAmount(document.getElementById('pocketInitial').value);
+    const newPocket = {
+      id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      name,
+      emoji: currentPocketEmoji,
+      color: currentPocketColor,
+      initial,
+      created: Date.now()
+    };
+    state.pockets.push(newPocket);
+    activePocketId = newPocket.id;
+  }
+  save();
+  render();
+  closePocketModal();
+  toast('Bolsillo guardado');
+}
+
+function editPocket(id) { openPocketModal(id); }
+
+function deleteCurrentPocket() {
+  if (!editingPocketId) return;
+  const p = state.pockets.find(x => x.id === editingPocketId);
+  const moveCount = state.pocketMoves.filter(m => m.pocketId === editingPocketId).length;
+  const msg = moveCount > 0
+    ? `¿Eliminar "${p.name}"? Se perderán ${moveCount} movimientos asociados.`
+    : `¿Eliminar "${p.name}"?`;
+  if (!confirm(msg)) return;
+  state.pockets = state.pockets.filter(x => x.id !== editingPocketId);
+  state.pocketMoves = state.pocketMoves.filter(m => m.pocketId !== editingPocketId);
+  if (activePocketId === editingPocketId) activePocketId = null;
+  save();
+  render();
+  closePocketModal();
+  toast('Bolsillo eliminado');
+}
+
+function openPocketMove(pocketId, type) {
+  pocketMoveTargetId = pocketId;
+  pocketMoveType = type;
+  const pocket = state.pockets.find(p => p.id === pocketId);
+  const action = type === 'deposit' ? 'Depositar en' : 'Retirar de';
+  document.getElementById('pocketMoveTitle').textContent = `${action} ${pocket.name}`;
+  document.getElementById('pocketMoveAmount').value = '';
+  document.getElementById('pocketMoveNote').value = '';
+  const btn = document.getElementById('pocketMoveConfirmBtn');
+  btn.textContent = type === 'deposit' ? 'Depositar' : 'Retirar';
+  btn.style.background = type === 'deposit' ? 'var(--green)' : 'var(--red)';
+  document.getElementById('pocketMoveModal').classList.add('open');
+  setTimeout(() => document.getElementById('pocketMoveAmount').focus(), 300);
+}
+
+function closePocketMoveModal() {
+  document.getElementById('pocketMoveModal').classList.remove('open');
+  // Reset button style
+  document.getElementById('pocketMoveConfirmBtn').style.background = '';
+}
+
+function savePocketMove() {
+  const amount = parseAmount(document.getElementById('pocketMoveAmount').value);
+  const note = document.getElementById('pocketMoveNote').value.trim();
+  if (amount <= 0) { toast('Ingresa un monto válido'); return; }
+
+  // Validate withdrawal doesn't exceed balance (warn but allow)
+  if (pocketMoveType === 'withdraw') {
+    const currentBal = getPocketBalance(pocketMoveTargetId);
+    if (amount > currentBal) {
+      if (!confirm(`El monto supera el saldo actual (${formatMoney(currentBal)}). ¿Continuar de todos modos?`)) {
+        return;
+      }
+    }
+  }
+
+  state.pocketMoves.push({
+    id: 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    pocketId: pocketMoveTargetId,
+    type: pocketMoveType,
+    amount,
+    note,
+    date: Date.now()
+  });
+  save();
+  render();
+  closePocketMoveModal();
+  toast(pocketMoveType === 'deposit' ? `+${formatMoney(amount)} depositado` : `−${formatMoney(amount)} retirado`);
+}
+
 // ============ AMOUNT INPUT FORMATTING ============
 function attachAmountFormatting(el) {
   el.addEventListener('input', e => {
@@ -1355,6 +1990,8 @@ render();
 attachAmountFormatting(document.getElementById('txAmount'));
 attachAmountFormatting(document.getElementById('goalTarget'));
 attachAmountFormatting(document.getElementById('goalAmount'));
+attachAmountFormatting(document.getElementById('pocketInitial'));
+attachAmountFormatting(document.getElementById('pocketMoveAmount'));
 
 // Register service worker for offline support
 if ('serviceWorker' in navigator) {
