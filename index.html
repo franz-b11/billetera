@@ -1055,12 +1055,29 @@ body {
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="addToGoalTitle">Aportar a meta</div>
+    <div id="addToGoalInfo" style="text-align:center; font-size:13px; margin-bottom:14px; padding:10px; background:var(--bg); border-radius:10px; border:1px solid var(--line);"></div>
     <div class="field">
       <label class="field-label">Monto a aportar</label>
       <input type="text" inputmode="numeric" id="goalAmount" class="amount-input" placeholder="0">
     </div>
     <button class="btn-primary" onclick="addToGoal()">Aportar</button>
     <button class="btn-secondary" onclick="closeAddToGoalModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- WITHDRAW FROM GOAL MODAL -->
+<div class="modal-backdrop" id="withdrawGoalModal" onclick="if(event.target===this) closeWithdrawGoalModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="withdrawGoalTitle">Retirar de meta</div>
+    <div id="withdrawGoalInfo" style="text-align:center; font-size:13px; margin-bottom:14px; padding:10px; background:var(--bg); border-radius:10px; border:1px solid var(--line);"></div>
+    <div class="field">
+      <label class="field-label">Monto a retirar</label>
+      <input type="text" inputmode="numeric" id="withdrawGoalAmount" class="amount-input" placeholder="0">
+    </div>
+    <div style="text-align:center; font-size:11px; color:var(--ink-mute); margin-bottom:12px;">El monto regresará al disponible libre</div>
+    <button class="btn-primary" style="background:var(--red)" onclick="withdrawFromGoal()">Retirar</button>
+    <button class="btn-secondary" onclick="closeWithdrawGoalModal()">Cancelar</button>
   </div>
 </div>
 
@@ -1127,6 +1144,7 @@ let editingTxId = null;
 let currentEmoji = '💰';
 let editingGoalId = null;
 let addingToGoalId = null;
+let withdrawingFromGoalId = null;
 let editingPocketId = null;
 let currentPocketEmoji = '💼';
 let currentPocketColor = '#e8a87c';
@@ -1250,9 +1268,14 @@ function getTotalInPockets() {
   return state.pockets.reduce((sum, p) => sum + getPocketBalance(p.id), 0);
 }
 
+function getTotalInGoals() {
+  // Sum of money currently saved across all goals
+  return state.goals.reduce((sum, g) => sum + (g.current || 0), 0);
+}
+
 function getTotalAccumulated() {
   // Total accumulated = sum of all transactions ever + initial balances of pockets
-  // This represents ALL the money you have access to (free + in pockets)
+  // This represents ALL the money you have access to (free + in pockets + in goals)
   let total = 0;
   state.transactions.forEach(t => {
     total += t.type === 'income' ? t.amount : -t.amount;
@@ -1265,8 +1288,8 @@ function getTotalAccumulated() {
 }
 
 function getAvailableFree() {
-  // Available = Total accumulated - Total currently in pockets
-  return getTotalAccumulated() - getTotalInPockets();
+  // Available = Total accumulated - In pockets - In goals
+  return getTotalAccumulated() - getTotalInPockets() - getTotalInGoals();
 }
 
 function renderAvailableCard() {
@@ -1274,7 +1297,8 @@ function renderAvailableCard() {
   if (!cardEl) return;
   const free = getAvailableFree();
   const inPockets = getTotalInPockets();
-  const total = free + inPockets;
+  const inGoals = getTotalInGoals();
+  const total = free + inPockets + inGoals;
 
   document.getElementById('freeValue').textContent = formatMoney(free);
   document.getElementById('inPocketsValue').textContent = formatMoney(inPockets);
@@ -1354,6 +1378,7 @@ function renderGoals() {
       </div>
       <div class="goal-actions">
         <button class="goal-btn" onclick="openAddToGoal('${g.id}')">+ Aportar</button>
+        <button class="goal-btn" onclick="openWithdrawFromGoal('${g.id}')">− Retirar</button>
         <button class="goal-btn" onclick="editGoal('${g.id}')">Editar</button>
       </div>
     </div>`;
@@ -1617,12 +1642,17 @@ function saveGoal() {
 function editGoal(id) { openGoalModal(id); }
 function deleteCurrentGoal() {
   if (!editingGoalId) return;
-  if (!confirm('¿Eliminar esta meta? El historial de aportes se perderá.')) return;
+  const g = state.goals.find(x => x.id === editingGoalId);
+  const hasMoney = (g?.current || 0) > 0;
+  const msg = hasMoney
+    ? `¿Eliminar esta meta? Los ${formatMoney(g.current)} acumulados volverán al disponible libre.`
+    : '¿Eliminar esta meta?';
+  if (!confirm(msg)) return;
   state.goals = state.goals.filter(g => g.id !== editingGoalId);
   save();
   render();
   closeGoalModal();
-  toast('Meta eliminada');
+  toast(hasMoney ? `Meta eliminada · ${formatMoney(g.current)} devueltos` : 'Meta eliminada');
 }
 
 // ============ ADD TO GOAL ============
@@ -1632,6 +1662,14 @@ function openAddToGoal(id) {
   if (!g) return;
   document.getElementById('addToGoalTitle').textContent = 'Aportar a ' + g.name;
   document.getElementById('goalAmount').value = '';
+
+  // Show available info
+  const infoEl = document.getElementById('addToGoalInfo');
+  if (infoEl) {
+    const free = getAvailableFree();
+    infoEl.innerHTML = `<span style="color:var(--ink-mute)">Disponible libre:</span> <span style="color:${free <= 0 ? 'var(--red)' : 'var(--ink)'}; font-weight:500">${formatMoney(free)}</span>`;
+  }
+
   document.getElementById('addToGoalModal').classList.add('open');
   setTimeout(() => document.getElementById('goalAmount').focus(), 300);
 }
@@ -1644,14 +1682,62 @@ function closeAddToGoalModal() {
 function addToGoal() {
   const amount = parseAmount(document.getElementById('goalAmount').value);
   if (amount <= 0) { toast('Ingresa un monto válido'); return; }
+
+  // Validate against available free money
+  const free = getAvailableFree();
+  if (amount > free) {
+    toast(`Solo tienes ${formatMoney(free)} disponibles`);
+    return;
+  }
+
   const g = state.goals.find(x => x.id === addingToGoalId);
   if (g) {
-    g.current += amount;
+    g.current = (g.current || 0) + amount;
     save();
     render();
     closeAddToGoalModal();
     toast(`+${formatMoney(amount)} aportado`);
   }
+}
+
+function openWithdrawFromGoal(id) {
+  withdrawingFromGoalId = id;
+  const g = state.goals.find(x => x.id === id);
+  if (!g) return;
+  document.getElementById('withdrawGoalTitle').textContent = 'Retirar de ' + g.name;
+  document.getElementById('withdrawGoalAmount').value = '';
+
+  const infoEl = document.getElementById('withdrawGoalInfo');
+  if (infoEl) {
+    infoEl.innerHTML = `<span style="color:var(--ink-mute)">Acumulado en meta:</span> <span style="color:var(--accent); font-weight:500">${formatMoney(g.current || 0)}</span>`;
+  }
+
+  document.getElementById('withdrawGoalModal').classList.add('open');
+  setTimeout(() => document.getElementById('withdrawGoalAmount').focus(), 300);
+}
+
+function closeWithdrawGoalModal() {
+  document.getElementById('withdrawGoalModal').classList.remove('open');
+  withdrawingFromGoalId = null;
+}
+
+function withdrawFromGoal() {
+  const amount = parseAmount(document.getElementById('withdrawGoalAmount').value);
+  if (amount <= 0) { toast('Ingresa un monto válido'); return; }
+
+  const g = state.goals.find(x => x.id === withdrawingFromGoalId);
+  if (!g) return;
+
+  if (amount > (g.current || 0)) {
+    toast(`La meta solo tiene ${formatMoney(g.current || 0)}`);
+    return;
+  }
+
+  g.current = (g.current || 0) - amount;
+  save();
+  render();
+  closeWithdrawGoalModal();
+  toast(`−${formatMoney(amount)} retirado al disponible`);
 }
 
 // ============ POCKETS ============
@@ -2123,6 +2209,7 @@ render();
 attachAmountFormatting(document.getElementById('txAmount'));
 attachAmountFormatting(document.getElementById('goalTarget'));
 attachAmountFormatting(document.getElementById('goalAmount'));
+attachAmountFormatting(document.getElementById('withdrawGoalAmount'));
 attachAmountFormatting(document.getElementById('pocketInitial'));
 attachAmountFormatting(document.getElementById('pocketMoveAmount'));
 
