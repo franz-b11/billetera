@@ -149,6 +149,64 @@ body {
 .meta-value.in { color: var(--green); }
 .meta-value.out { color: var(--red); }
 
+/* ============ AVAILABLE CARD (disponible libre + bolsillos) ============ */
+.available-card {
+  margin: 0 20px 20px;
+  padding: 16px 20px;
+  background: var(--bg-elevated);
+  border-radius: 18px;
+  border: 1px solid var(--line);
+}
+.available-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.available-item {
+  flex: 1;
+}
+.available-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--line-strong);
+}
+.available-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-mute);
+  margin-bottom: 4px;
+}
+.available-value {
+  font-family: 'Fraunces', serif;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.available-value.accent { color: var(--accent); }
+.available-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+.available-total-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+.available-total-value {
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
 /* ============ TABS ============ */
 .tab-content { display: none; padding: 0 20px; }
 .tab-content.active { display: block; animation: fadeIn 0.25s ease; }
@@ -820,6 +878,24 @@ body {
   </div>
 </div>
 
+<div class="available-card" id="availableCard">
+  <div class="available-row">
+    <div class="available-item">
+      <div class="available-label">Disponible libre</div>
+      <div class="available-value" id="freeValue">$0</div>
+    </div>
+    <div class="available-divider"></div>
+    <div class="available-item">
+      <div class="available-label">En bolsillos</div>
+      <div class="available-value accent" id="inPocketsValue">$0</div>
+    </div>
+  </div>
+  <div class="available-total">
+    <span class="available-total-label">Total tuyo</span>
+    <span class="available-total-value" id="totalValue">$0</span>
+  </div>
+</div>
+
 <!-- TAB: MOVIMIENTOS -->
 <div class="tab-content active" id="tab-transactions">
   <div class="section-title">
@@ -1020,6 +1096,7 @@ body {
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="pocketMoveTitle">Mover dinero</div>
+    <div id="pocketMoveInfo" style="text-align:center; font-size:13px; margin-bottom:14px; padding:10px; background:var(--bg); border-radius:10px; border:1px solid var(--line);"></div>
     <div class="field">
       <label class="field-label">Monto</label>
       <input type="text" inputmode="numeric" id="pocketMoveAmount" class="amount-input" placeholder="0">
@@ -1147,7 +1224,8 @@ function renderHeader() {
   document.getElementById('currentMonth').textContent =
     now.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }).toUpperCase();
 
-  // Calculate this month's balance (transactions + pocket moves)
+  // Balance del mes = SOLO transacciones (ingresos/gastos)
+  // Los movimientos de bolsillos NO son ingresos ni gastos, solo reubican plata
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   let income = 0, expense = 0;
   state.transactions.forEach(t => {
@@ -1156,19 +1234,55 @@ function renderHeader() {
       else expense += t.amount;
     }
   });
-  // Include pocket movements in monthly balance
-  state.pocketMoves.forEach(m => {
-    if (m.date >= monthStart) {
-      if (m.type === 'deposit') income += m.amount;
-      else expense += m.amount;
-    }
-  });
   const balance = income - expense;
   const bEl = document.getElementById('balanceAmount');
   bEl.classList.toggle('negative', balance < 0);
   document.getElementById('balanceValue').textContent = ' ' + formatMoneyShort(Math.abs(balance));
   document.getElementById('incomeValue').textContent = formatMoney(income);
   document.getElementById('expenseValue').textContent = formatMoney(expense);
+
+  // Render the "Disponible libre" + "En bolsillos" mini-card
+  renderAvailableCard();
+}
+
+function getTotalInPockets() {
+  // Sum of current balances across all pockets (including initial)
+  return state.pockets.reduce((sum, p) => sum + getPocketBalance(p.id), 0);
+}
+
+function getTotalAccumulated() {
+  // Total accumulated = sum of all transactions ever + initial balances of pockets
+  // This represents ALL the money you have access to (free + in pockets)
+  let total = 0;
+  state.transactions.forEach(t => {
+    total += t.type === 'income' ? t.amount : -t.amount;
+  });
+  // Add initial pocket balances (those came from "outside" your registered movements)
+  state.pockets.forEach(p => {
+    total += (p.initial || 0);
+  });
+  return total;
+}
+
+function getAvailableFree() {
+  // Available = Total accumulated - Total currently in pockets
+  return getTotalAccumulated() - getTotalInPockets();
+}
+
+function renderAvailableCard() {
+  const cardEl = document.getElementById('availableCard');
+  if (!cardEl) return;
+  const free = getAvailableFree();
+  const inPockets = getTotalInPockets();
+  const total = free + inPockets;
+
+  document.getElementById('freeValue').textContent = formatMoney(free);
+  document.getElementById('inPocketsValue').textContent = formatMoney(inPockets);
+  document.getElementById('totalValue').textContent = formatMoney(total);
+
+  // Color hint if free is negative
+  const freeEl = document.getElementById('freeValue');
+  freeEl.style.color = free < 0 ? 'var(--red)' : 'var(--ink)';
 }
 
 function renderTransactions() {
@@ -1854,6 +1968,17 @@ function openPocketMove(pocketId, type) {
   document.getElementById('pocketMoveTitle').textContent = `${action} ${pocket.name}`;
   document.getElementById('pocketMoveAmount').value = '';
   document.getElementById('pocketMoveNote').value = '';
+
+  // Show context info: available money for deposit, pocket balance for withdrawal
+  const infoEl = document.getElementById('pocketMoveInfo');
+  if (type === 'deposit') {
+    const free = getAvailableFree();
+    infoEl.innerHTML = `<span style="color:var(--ink-mute)">Disponible libre:</span> <span style="color:${free <= 0 ? 'var(--red)' : 'var(--ink)'}; font-weight:500">${formatMoney(free)}</span>`;
+  } else {
+    const bal = getPocketBalance(pocketId);
+    infoEl.innerHTML = `<span style="color:var(--ink-mute)">Saldo del bolsillo:</span> <span style="color:${pocket.color}; font-weight:500">${formatMoney(bal)}</span>`;
+  }
+
   const btn = document.getElementById('pocketMoveConfirmBtn');
   btn.textContent = type === 'deposit' ? 'Depositar' : 'Retirar';
   btn.style.background = type === 'deposit' ? 'var(--green)' : 'var(--red)';
@@ -1872,13 +1997,21 @@ function savePocketMove() {
   const note = document.getElementById('pocketMoveNote').value.trim();
   if (amount <= 0) { toast('Ingresa un monto válido'); return; }
 
-  // Validate withdrawal doesn't exceed balance (warn but allow)
+  // Validate deposit doesn't exceed available free money
+  if (pocketMoveType === 'deposit') {
+    const free = getAvailableFree();
+    if (amount > free) {
+      toast(`Solo tienes ${formatMoney(free)} disponibles`);
+      return;
+    }
+  }
+
+  // Validate withdrawal doesn't exceed pocket balance
   if (pocketMoveType === 'withdraw') {
     const currentBal = getPocketBalance(pocketMoveTargetId);
     if (amount > currentBal) {
-      if (!confirm(`El monto supera el saldo actual (${formatMoney(currentBal)}). ¿Continuar de todos modos?`)) {
-        return;
-      }
+      toast(`El bolsillo solo tiene ${formatMoney(currentBal)}`);
+      return;
     }
   }
 
