@@ -69,3 +69,5 @@ Todo el código está en un solo archivo: `index.html`. Edítalo libremente:
 - Aportes automáticos a metas al recibir un ingreso
 
 Cuando quieras agregar alguna, dime y la integramos.
+
+<!-- redeploy -->
