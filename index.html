@@ -967,9 +967,18 @@ body {
       <button class="btn-secondary btn-danger" style="width:auto; padding: 8px 14px;" onclick="clearAll()">Borrar</button>
     </div>
   </div>
+
+  <div class="section-title">diagnóstico</div>
+  <div class="report-summary" id="diagnosticBox">
+    <div style="font-size:12px; color:var(--ink-mute); margin-bottom:10px; text-align:center;">
+      Si los números no cuadran, revisa aquí
+    </div>
+    <div id="diagnosticContent"></div>
+  </div>
   <div style="text-align:center; padding: 30px 20px; color: var(--ink-mute); font-size: 12px;">
     <div class="serif" style="font-style: italic; font-size: 15px; margin-bottom: 6px;">bolsillo</div>
     tus datos viven solo en este dispositivo
+    <div style="margin-top:12px; font-family:'DM Mono',monospace; font-size:10px; opacity:0.5">v4 · metas descuentan</div>
   </div>
 </div>
 
@@ -1235,6 +1244,60 @@ function render() {
   renderGoals();
   renderPockets();
   renderReports();
+  renderDiagnostic();
+}
+
+function renderDiagnostic() {
+  const el = document.getElementById('diagnosticContent');
+  if (!el) return;
+
+  // Sum of all-time income/expense
+  let totalIn = 0, totalOut = 0;
+  state.transactions.forEach(t => {
+    if (t.type === 'income') totalIn += t.amount;
+    else totalOut += t.amount;
+  });
+
+  const initialsSum = state.pockets.reduce((s, p) => s + (p.initial || 0), 0);
+  const inPockets = getTotalInPockets();
+  const inGoals = getTotalInGoals();
+  const accumulated = getTotalAccumulated();
+  const free = getAvailableFree();
+
+  el.innerHTML = `
+    <div class="report-row">
+      <span class="label">Total ingresos (histórico)</span>
+      <span class="amount" style="color:var(--green)">${formatMoney(totalIn)}</span>
+    </div>
+    <div class="report-row">
+      <span class="label">Total gastos (histórico)</span>
+      <span class="amount" style="color:var(--red)">${formatMoney(totalOut)}</span>
+    </div>
+    <div class="report-row">
+      <span class="label">+ Saldos iniciales de bolsillos</span>
+      <span class="amount">${formatMoney(initialsSum)}</span>
+    </div>
+    <div class="report-row">
+      <span class="label" style="font-weight:600">= Total acumulado</span>
+      <span class="amount" style="font-weight:600">${formatMoney(accumulated)}</span>
+    </div>
+    <div class="report-row">
+      <span class="label">− Apartado en bolsillos</span>
+      <span class="amount" style="color:var(--accent)">${formatMoney(inPockets)}</span>
+    </div>
+    <div class="report-row">
+      <span class="label">− Apartado en metas</span>
+      <span class="amount" style="color:var(--gold)">${formatMoney(inGoals)}</span>
+    </div>
+    <div class="report-row">
+      <span class="label" style="font-weight:600">= Disponible libre</span>
+      <span class="amount" style="font-weight:600; color:${free < 0 ? 'var(--red)' : 'var(--green)'}">${formatMoney(free)}</span>
+    </div>
+    <div class="report-row">
+      <span class="label" style="font-size:10px; color:var(--ink-mute)">Movs: ${state.transactions.length} · Metas: ${state.goals.length} · Bolsillos: ${state.pockets.length}</span>
+      <span></span>
+    </div>
+  `;
 }
 
 function renderHeader() {
