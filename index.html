@@ -879,20 +879,9 @@ body {
 </div>
 
 <div class="available-card" id="availableCard">
-  <div class="available-row">
-    <div class="available-item">
-      <div class="available-label">Disponible libre</div>
-      <div class="available-value" id="freeValue">$0</div>
-    </div>
-    <div class="available-divider"></div>
-    <div class="available-item">
-      <div class="available-label">En bolsillos</div>
-      <div class="available-value accent" id="inPocketsValue">$0</div>
-    </div>
-  </div>
-  <div class="available-total">
-    <span class="available-total-label">Total tuyo</span>
-    <span class="available-total-value" id="totalValue">$0</span>
+  <div class="available-row" style="justify-content: space-between;">
+    <div class="available-label" style="margin-bottom:0">⬚ En bolsillos</div>
+    <div class="available-value accent" id="inPocketsValue" style="font-size:17px">$0</div>
   </div>
 </div>
 
@@ -978,7 +967,7 @@ body {
   <div style="text-align:center; padding: 30px 20px; color: var(--ink-mute); font-size: 12px;">
     <div class="serif" style="font-style: italic; font-size: 15px; margin-bottom: 6px;">bolsillo</div>
     tus datos viven solo en este dispositivo
-    <div style="margin-top:12px; font-family:'DM Mono',monospace; font-size:10px; opacity:0.5">v4 · metas descuentan</div>
+    <div style="margin-top:12px; font-family:'DM Mono',monospace; font-size:10px; opacity:0.5">v5 · modelo unificado</div>
   </div>
 </div>
 
@@ -1145,7 +1134,8 @@ let state = {
   transactions: [],
   goals: [],
   pockets: [],
-  pocketMoves: []
+  pocketMoves: [],
+  goalMoves: []
 };
 let currentTxType = 'expense';
 let currentCategory = null;
@@ -1205,6 +1195,7 @@ function load() {
       state.goals = parsed.goals || [];
       state.pockets = parsed.pockets || [];
       state.pocketMoves = parsed.pocketMoves || [];
+      state.goalMoves = parsed.goalMoves || [];
     }
   } catch(e) { console.error(e); }
 }
@@ -1251,7 +1242,6 @@ function renderDiagnostic() {
   const el = document.getElementById('diagnosticContent');
   if (!el) return;
 
-  // Sum of all-time income/expense
   let totalIn = 0, totalOut = 0;
   state.transactions.forEach(t => {
     if (t.type === 'income') totalIn += t.amount;
@@ -1260,38 +1250,44 @@ function renderDiagnostic() {
 
   const initialsSum = state.pockets.reduce((s, p) => s + (p.initial || 0), 0);
   const inPockets = getTotalInPockets();
-  const inGoals = getTotalInGoals();
-  const accumulated = getTotalAccumulated();
-  const free = getAvailableFree();
+  const goalDeposits = (state.goalMoves || []).filter(m => m.type === 'deposit').reduce((s, m) => s + m.amount, 0);
+  const goalWithdraws = (state.goalMoves || []).filter(m => m.type === 'withdraw').reduce((s, m) => s + m.amount, 0);
+  const pocketDeposits = state.pocketMoves.filter(m => m.type === 'deposit').reduce((s, m) => s + m.amount, 0);
+  const pocketWithdraws = state.pocketMoves.filter(m => m.type === 'withdraw').reduce((s, m) => s + m.amount, 0);
+  const available = getAvailableMoney();
 
   el.innerHTML = `
     <div class="report-row">
-      <span class="label">Total ingresos (histórico)</span>
-      <span class="amount" style="color:var(--green)">${formatMoney(totalIn)}</span>
+      <span class="label">Ingresos (histórico)</span>
+      <span class="amount" style="color:var(--green)">+${formatMoney(totalIn)}</span>
     </div>
     <div class="report-row">
-      <span class="label">Total gastos (histórico)</span>
-      <span class="amount" style="color:var(--red)">${formatMoney(totalOut)}</span>
+      <span class="label">Gastos (histórico)</span>
+      <span class="amount" style="color:var(--red)">−${formatMoney(totalOut)}</span>
     </div>
     <div class="report-row">
-      <span class="label">+ Saldos iniciales de bolsillos</span>
-      <span class="amount">${formatMoney(initialsSum)}</span>
+      <span class="label">+ Saldos iniciales bolsillos</span>
+      <span class="amount">+${formatMoney(initialsSum)}</span>
     </div>
     <div class="report-row">
-      <span class="label" style="font-weight:600">= Total acumulado</span>
-      <span class="amount" style="font-weight:600">${formatMoney(accumulated)}</span>
+      <span class="label">A metas (aportes)</span>
+      <span class="amount" style="color:var(--red)">−${formatMoney(goalDeposits)}</span>
     </div>
     <div class="report-row">
-      <span class="label">− Apartado en bolsillos</span>
-      <span class="amount" style="color:var(--accent)">${formatMoney(inPockets)}</span>
+      <span class="label">De metas (retiros)</span>
+      <span class="amount" style="color:var(--green)">+${formatMoney(goalWithdraws)}</span>
     </div>
     <div class="report-row">
-      <span class="label">− Apartado en metas</span>
-      <span class="amount" style="color:var(--gold)">${formatMoney(inGoals)}</span>
+      <span class="label">A bolsillos (aportes)</span>
+      <span class="amount" style="color:var(--red)">−${formatMoney(pocketDeposits)}</span>
     </div>
     <div class="report-row">
-      <span class="label" style="font-weight:600">= Disponible libre</span>
-      <span class="amount" style="font-weight:600; color:${free < 0 ? 'var(--red)' : 'var(--green)'}">${formatMoney(free)}</span>
+      <span class="label">De bolsillos (retiros)</span>
+      <span class="amount" style="color:var(--green)">+${formatMoney(pocketWithdraws)}</span>
+    </div>
+    <div class="report-row">
+      <span class="label" style="font-weight:600">= Saldo disponible</span>
+      <span class="amount" style="font-weight:600; color:${available < 0 ? 'var(--red)' : 'var(--green)'}">${formatMoney(available)}</span>
     </div>
     <div class="report-row">
       <span class="label" style="font-size:10px; color:var(--ink-mute)">Movs: ${state.transactions.length} · Metas: ${state.goals.length} · Bolsillos: ${state.pockets.length}</span>
@@ -1305,14 +1301,29 @@ function renderHeader() {
   document.getElementById('currentMonth').textContent =
     now.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }).toUpperCase();
 
-  // Balance del mes = SOLO transacciones (ingresos/gastos)
-  // Los movimientos de bolsillos NO son ingresos ni gastos, solo reubican plata
+  // Balance del mes = ingresos − gastos − aportes a meta/bolsillo + retiros de meta/bolsillo
+  // Todos los movimientos del mes cuentan
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   let income = 0, expense = 0;
   state.transactions.forEach(t => {
     if (t.date >= monthStart) {
       if (t.type === 'income') income += t.amount;
       else expense += t.amount;
+    }
+  });
+  // Aportes a metas = gasto, retiros de metas = ingreso
+  state.goalMoves = state.goalMoves || [];
+  state.goalMoves.forEach(m => {
+    if (m.date >= monthStart) {
+      if (m.type === 'deposit') expense += m.amount;
+      else income += m.amount;
+    }
+  });
+  // Aportes a bolsillos = gasto, retiros de bolsillos = ingreso
+  state.pocketMoves.forEach(m => {
+    if (m.date >= monthStart) {
+      if (m.type === 'deposit') expense += m.amount;
+      else income += m.amount;
     }
   });
   const balance = income - expense;
@@ -1322,59 +1333,98 @@ function renderHeader() {
   document.getElementById('incomeValue').textContent = formatMoney(income);
   document.getElementById('expenseValue').textContent = formatMoney(expense);
 
-  // Render the "Disponible libre" + "En bolsillos" mini-card
   renderAvailableCard();
 }
 
 function getTotalInPockets() {
-  // Sum of current balances across all pockets (including initial)
   return state.pockets.reduce((sum, p) => sum + getPocketBalance(p.id), 0);
 }
 
-function getTotalInGoals() {
-  // Sum of money currently saved across all goals
-  return state.goals.reduce((sum, g) => sum + (g.current || 0), 0);
-}
-
-function getTotalAccumulated() {
-  // Total accumulated = sum of all transactions ever + initial balances of pockets
-  // This represents ALL the money you have access to (free + in pockets + in goals)
-  let total = 0;
+function getAvailableMoney() {
+  // El saldo realmente disponible = TODOS los ingresos del histórico
+  // − TODOS los gastos del histórico
+  // − Lo que está actualmente en bolsillos (apartado)
+  // − Lo que está actualmente en metas (apartado)
+  // + Saldos iniciales de bolsillos (esos vinieron de "afuera", ya están contados como apartados)
+  let net = 0;
   state.transactions.forEach(t => {
-    total += t.type === 'income' ? t.amount : -t.amount;
+    net += t.type === 'income' ? t.amount : -t.amount;
   });
-  // Add initial pocket balances (those came from "outside" your registered movements)
-  state.pockets.forEach(p => {
-    total += (p.initial || 0);
-  });
-  return total;
-}
+  // Saldos iniciales se cuentan como ingreso (eran tuyos antes), pero luego se descuentan por estar apartados
+  state.pockets.forEach(p => { net += (p.initial || 0); });
 
-function getAvailableFree() {
-  // Available = Total accumulated - In pockets - In goals
-  return getTotalAccumulated() - getTotalInPockets() - getTotalInGoals();
+  // Aportes a meta = sale del disponible, retiros = entran
+  (state.goalMoves || []).forEach(m => {
+    net += m.type === 'deposit' ? -m.amount : m.amount;
+  });
+  // Aportes a bolsillo = sale del disponible, retiros = entran
+  state.pocketMoves.forEach(m => {
+    net += m.type === 'deposit' ? -m.amount : m.amount;
+  });
+  return net;
 }
 
 function renderAvailableCard() {
   const cardEl = document.getElementById('availableCard');
   if (!cardEl) return;
-  const free = getAvailableFree();
   const inPockets = getTotalInPockets();
-  const inGoals = getTotalInGoals();
-  const total = free + inPockets + inGoals;
-
-  document.getElementById('freeValue').textContent = formatMoney(free);
   document.getElementById('inPocketsValue').textContent = formatMoney(inPockets);
-  document.getElementById('totalValue').textContent = formatMoney(total);
-
-  // Color hint if free is negative
-  const freeEl = document.getElementById('freeValue');
-  freeEl.style.color = free < 0 ? 'var(--red)' : 'var(--ink)';
 }
 
 function renderTransactions() {
   const list = document.getElementById('txList');
-  const sorted = [...state.transactions].sort((a, b) => b.date - a.date);
+
+  // Combinar transacciones + movimientos de meta + movimientos de bolsillo
+  const allMovements = [];
+
+  state.transactions.forEach(t => {
+    const cat = getCategory(t.type, t.category);
+    allMovements.push({
+      kind: 'transaction',
+      id: t.id,
+      type: t.type, // income / expense
+      amount: t.amount,
+      date: t.date,
+      desc: t.description || cat.name,
+      catName: cat.name,
+      emoji: cat.emoji,
+      onclick: `editTx('${t.id}')`
+    });
+  });
+
+  (state.goalMoves || []).forEach(m => {
+    const g = state.goals.find(x => x.id === m.goalId);
+    if (!g) return;
+    allMovements.push({
+      kind: 'goal',
+      id: m.id,
+      type: m.type === 'deposit' ? 'expense' : 'income',
+      amount: m.amount,
+      date: m.date,
+      desc: m.type === 'deposit' ? `Aporte a meta` : `Retiro de meta`,
+      catName: g.name,
+      emoji: g.emoji,
+      onclick: `switchTab('goals')`
+    });
+  });
+
+  state.pocketMoves.forEach(m => {
+    const p = state.pockets.find(x => x.id === m.pocketId);
+    if (!p) return;
+    allMovements.push({
+      kind: 'pocket',
+      id: m.id,
+      type: m.type === 'deposit' ? 'expense' : 'income',
+      amount: m.amount,
+      date: m.date,
+      desc: m.type === 'deposit' ? `A bolsillo` : `De bolsillo`,
+      catName: p.name,
+      emoji: p.emoji,
+      onclick: `switchTab('pockets'); selectPocket('${p.id}')`
+    });
+  });
+
+  const sorted = allMovements.sort((a, b) => b.date - a.date);
   document.getElementById('txCount').textContent = sorted.length.toString().padStart(3, '0');
 
   if (sorted.length === 0) {
@@ -1386,20 +1436,24 @@ function renderTransactions() {
     return;
   }
 
-  list.innerHTML = sorted.map(t => {
-    const cat = getCategory(t.type, t.category);
-    return `<div class="tx-item" onclick="editTx('${t.id}')">
-      <div class="tx-icon">${cat.emoji}</div>
+  list.innerHTML = sorted.map(m => {
+    // Subtle visual tag for kind
+    let tag = '';
+    if (m.kind === 'goal') tag = '<span style="font-size:9px; padding:2px 6px; background:rgba(227,196,109,0.15); color:var(--gold); border-radius:6px; margin-left:6px;">META</span>';
+    if (m.kind === 'pocket') tag = '<span style="font-size:9px; padding:2px 6px; background:rgba(232,168,124,0.15); color:var(--accent); border-radius:6px; margin-left:6px;">BOLSILLO</span>';
+
+    return `<div class="tx-item" onclick="${m.onclick}">
+      <div class="tx-icon">${m.emoji}</div>
       <div class="tx-info">
-        <div class="tx-desc">${escapeHtml(t.description || cat.name)}</div>
+        <div class="tx-desc">${escapeHtml(m.desc)} ${tag}</div>
         <div class="tx-meta">
-          <span class="tx-cat">${cat.name}</span>
+          <span class="tx-cat">${escapeHtml(m.catName)}</span>
           <span>·</span>
-          <span>${formatDate(t.date)}</span>
+          <span>${formatDate(m.date)}</span>
         </div>
       </div>
-      <div class="tx-amount ${t.type === 'income' ? 'in' : 'out'}">
-        ${t.type === 'income' ? '+' : '−'}${formatMoney(t.amount)}
+      <div class="tx-amount ${m.type === 'income' ? 'in' : 'out'}">
+        ${m.type === 'income' ? '+' : '−'}${formatMoney(m.amount)}
       </div>
     </div>`;
   }).join('');
@@ -1726,11 +1780,11 @@ function openAddToGoal(id) {
   document.getElementById('addToGoalTitle').textContent = 'Aportar a ' + g.name;
   document.getElementById('goalAmount').value = '';
 
-  // Show available info
+  // Mostrar saldo disponible real
   const infoEl = document.getElementById('addToGoalInfo');
   if (infoEl) {
-    const free = getAvailableFree();
-    infoEl.innerHTML = `<span style="color:var(--ink-mute)">Disponible libre:</span> <span style="color:${free <= 0 ? 'var(--red)' : 'var(--ink)'}; font-weight:500">${formatMoney(free)}</span>`;
+    const available = getAvailableMoney();
+    infoEl.innerHTML = `<span style="color:var(--ink-mute)">Saldo disponible:</span> <span style="color:${available <= 0 ? 'var(--red)' : 'var(--ink)'}; font-weight:500">${formatMoney(available)}</span>`;
   }
 
   document.getElementById('addToGoalModal').classList.add('open');
@@ -1746,20 +1800,29 @@ function addToGoal() {
   const amount = parseAmount(document.getElementById('goalAmount').value);
   if (amount <= 0) { toast('Ingresa un monto válido'); return; }
 
-  // Validate against available free money
-  const free = getAvailableFree();
-  if (amount > free) {
-    toast(`Solo tienes ${formatMoney(free)} disponibles`);
+  // Validar contra saldo disponible total
+  const available = getAvailableMoney();
+  if (amount > available) {
+    toast(`Solo tienes ${formatMoney(available)} disponibles`);
     return;
   }
 
   const g = state.goals.find(x => x.id === addingToGoalId);
   if (g) {
     g.current = (g.current || 0) + amount;
+    // Registrar como movimiento
+    state.goalMoves = state.goalMoves || [];
+    state.goalMoves.push({
+      id: 'gm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      goalId: g.id,
+      type: 'deposit',
+      amount,
+      date: Date.now()
+    });
     save();
     render();
     closeAddToGoalModal();
-    toast(`+${formatMoney(amount)} aportado`);
+    toast(`+${formatMoney(amount)} aportado a ${g.name}`);
   }
 }
 
@@ -1797,10 +1860,19 @@ function withdrawFromGoal() {
   }
 
   g.current = (g.current || 0) - amount;
+  // Registrar como movimiento (entra plata al saldo)
+  state.goalMoves = state.goalMoves || [];
+  state.goalMoves.push({
+    id: 'gm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    goalId: g.id,
+    type: 'withdraw',
+    amount,
+    date: Date.now()
+  });
   save();
   render();
   closeWithdrawGoalModal();
-  toast(`−${formatMoney(amount)} retirado al disponible`);
+  toast(`+${formatMoney(amount)} retirado al saldo`);
 }
 
 // ============ POCKETS ============
@@ -2118,11 +2190,10 @@ function openPocketMove(pocketId, type) {
   document.getElementById('pocketMoveAmount').value = '';
   document.getElementById('pocketMoveNote').value = '';
 
-  // Show context info: available money for deposit, pocket balance for withdrawal
   const infoEl = document.getElementById('pocketMoveInfo');
   if (type === 'deposit') {
-    const free = getAvailableFree();
-    infoEl.innerHTML = `<span style="color:var(--ink-mute)">Disponible libre:</span> <span style="color:${free <= 0 ? 'var(--red)' : 'var(--ink)'}; font-weight:500">${formatMoney(free)}</span>`;
+    const available = getAvailableMoney();
+    infoEl.innerHTML = `<span style="color:var(--ink-mute)">Saldo disponible:</span> <span style="color:${available <= 0 ? 'var(--red)' : 'var(--ink)'}; font-weight:500">${formatMoney(available)}</span>`;
   } else {
     const bal = getPocketBalance(pocketId);
     infoEl.innerHTML = `<span style="color:var(--ink-mute)">Saldo del bolsillo:</span> <span style="color:${pocket.color}; font-weight:500">${formatMoney(bal)}</span>`;
@@ -2137,7 +2208,6 @@ function openPocketMove(pocketId, type) {
 
 function closePocketMoveModal() {
   document.getElementById('pocketMoveModal').classList.remove('open');
-  // Reset button style
   document.getElementById('pocketMoveConfirmBtn').style.background = '';
 }
 
@@ -2146,16 +2216,16 @@ function savePocketMove() {
   const note = document.getElementById('pocketMoveNote').value.trim();
   if (amount <= 0) { toast('Ingresa un monto válido'); return; }
 
-  // Validate deposit doesn't exceed available free money
+  // Validar depósito contra saldo disponible
   if (pocketMoveType === 'deposit') {
-    const free = getAvailableFree();
-    if (amount > free) {
-      toast(`Solo tienes ${formatMoney(free)} disponibles`);
+    const available = getAvailableMoney();
+    if (amount > available) {
+      toast(`Solo tienes ${formatMoney(available)} disponibles`);
       return;
     }
   }
 
-  // Validate withdrawal doesn't exceed pocket balance
+  // Validar retiro contra saldo del bolsillo
   if (pocketMoveType === 'withdraw') {
     const currentBal = getPocketBalance(pocketMoveTargetId);
     if (amount > currentBal) {
@@ -2175,7 +2245,10 @@ function savePocketMove() {
   save();
   render();
   closePocketMoveModal();
-  toast(pocketMoveType === 'deposit' ? `+${formatMoney(amount)} depositado` : `−${formatMoney(amount)} retirado`);
+  const pocket = state.pockets.find(p => p.id === pocketMoveTargetId);
+  toast(pocketMoveType === 'deposit'
+    ? `${formatMoney(amount)} movidos a ${pocket.name}`
+    : `${formatMoney(amount)} retirados de ${pocket.name}`);
 }
 
 // ============ AMOUNT INPUT FORMATTING ============
